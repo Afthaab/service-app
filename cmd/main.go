@@ -16,6 +16,7 @@ import (
 
 func main() {
 	err := startApp()
+
 	if err != nil {
 		log.Panic().Err(err).Send()
 	}
@@ -46,6 +47,7 @@ func startApp() error {
 	if err != nil {
 		return fmt.Errorf("constructing auth %w", err)
 	}
+
 	// Initialize service
 	api := http.Server{
 		Addr:         ":8080",
