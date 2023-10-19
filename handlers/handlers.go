@@ -1,19 +1,27 @@
 package handlers
 
 import (
+	"github.com/rs/zerolog/log"
+
 	"net/http"
 
+	"github.com/afthaab/service-app/auth"
 	"github.com/afthaab/service-app/middlewares"
 	"github.com/gin-gonic/gin"
 )
 
-func API() *gin.Engine {
+func API(a *auth.Auth) *gin.Engine {
 
 	router := gin.New()
 
-	router.Use(gin.Recovery(), middlewares.Log())
+	m, err := middlewares.NewMid(a)
+	if err != nil {
+		log.Panic().Msg("middlewares not set up")
+	}
 
-	router.GET("/check", CheckPoint)
+	router.Use(gin.Recovery(), m.Log())
+
+	router.GET("/check", m.Authenticate(CheckPoint))
 	return router
 }
 

@@ -8,7 +8,9 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/afthaab/service-app/auth"
 	"github.com/afthaab/service-app/handlers"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog/log"
 )
 
@@ -20,13 +22,37 @@ func main() {
 	log.Info().Msg("hello this is our app")
 }
 func startApp() error {
+	// opening the private key
+	privatePem, err := os.ReadFile("private.pem")
+	if err != nil {
+		return fmt.Errorf("reading auth private key %w", err)
+	}
+	pubkeyPem, err := os.ReadFile("pubkey.pem")
+	if err != nil {
+		return fmt.Errorf("reading auth public key %w", err)
+	}
+
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privatePem)
+	if err != nil {
+		return fmt.Errorf("parsing auth private key %w", err)
+	}
+
+	pubKey, err := jwt.ParseRSAPublicKeyFromPEM(pubkeyPem)
+	if err != nil {
+		return fmt.Errorf("parsing auth public key %w", err)
+	}
+
+	a, err := auth.NewAuth(privateKey, pubKey)
+	if err != nil {
+		return fmt.Errorf("constructing auth %w", err)
+	}
 	// Initialize service
 	api := http.Server{
 		Addr:         ":8080",
 		ReadTimeout:  8000 * time.Second,
 		WriteTimeout: 800 * time.Second,
 		IdleTimeout:  800 * time.Second,
-		Handler:      handlers.API(),
+		Handler:      handlers.API(a),
 	}
 
 	// channel to store any errors while setting up the service
